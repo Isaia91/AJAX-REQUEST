@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+        #j1 {
+            font-family: Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #j1 td,
+        #j1 th {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        #j1 tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #j1 tr:hover {
+            background-color: #ddd;
+        }
+
+        #j1 th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #04AA6D;
+            color: white;
+        }
+
+        #reader {
+            background-color: #4CAF50;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        h1 {
+            text-align: center;
+            text-transform: uppercase;
+            color: #4CAF50;
+        }
+
+        div {
+            border: 1px solid gray;
+            padding: 8px;
+        }
+
+        #formsnd {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>post on api ajax</h1>
+
+    <div>
+        <p>
+            Lecture de l'adresse depuis: <em><a
+                    href="https://tst.quantiq.nc/devweb-cfa/api/index.php">https://tst.quantiq.nc/devweb-cfa/api/index.php</em></a>
+        </p>
+        <br>
+        <p>
+            Post on API
+        </p>
+        <div>
+            <p>
+                Lecture de l'adresse depuis:
+                <a
+                    href="http://10.100.14.54/devweb-cfa/api.php?service=user&action=list">http://10.100.14.54/devweb-cfa/api.php?service=user&action=list</a>
+            </p>
+            <button id="reader" type="button" onclick="lance()">
+                Lire l'adresse !
+            </button>
+
+            <button id="reader" type="button" onclick="filtre()">
+                Filtrer
+            </button>
+            <div id="adress-output">
+                <table id="j1">
+                    <tr>
+                        <th>id</th>
+                        <th>Login</th>
+                        <th>email</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="adress-output">
+            <form id="formfst">
+                <div id="login">
+                    <label>
+                        Indentifiant<input id="id" type="text" placeholder="identifiant">
+                    </label>
+                    <label>
+                        Mot de passe <input id="Motdepasse" type="password" placeholder="Votre mot de passe">
+                    </label>
+                    <button type="button" id="jumpin" onclick="fonce();alteruser();">Login</button>
+                </div>
+            </form>
+            <form id="formsnd">
+                <label>Nom
+                    <input type="text" id="name">
+                </label>
+                <label>Prenom
+                    <input type="text" id="firstname">
+                </label>
+                <label>
+                    email<input type="email" id="email">
+                </label>
+                <button type="button" id="bttntosave" onclick="save()">Mettre a jour</button>
+            </form>
+        </div>
+        <div id="token" style="display: none;"></div>
+    </div>
+
+    <script>
+
+        function fonce() {
+
+            let mdp = document.getElementById("Motdepasse").value
+            let identifiant = document.getElementById("id").value
+
+            const xhttp = new XMLHttpRequest();
+            xhttp.open("POST", 'https://tst.quantiq.nc/devweb-cfa/api/index.php', true);
+
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    if (JSON.parse(this.responseText)["token"]) {
+                        console.log('dans le if de la fonction fonce')
+                        console.log(this.responseText)
+                        let token = (JSON.parse(this.responseText)["token"])
+                        alteruser(token)
+                        console.log(token);
+                    }
+                }
+                else {
+                    console.log("dans le else de fonce")
+                }
+
+            }
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+            xhttp.send('login=' + identifiant + '&' + 'passwd=' + mdp);
+
+        }
+
+        function alteruser(token) {
+
+
+
+            var xhttp = new XMLHttpRequest();
+
+            xhttp.onreadystatechange = function () {
+
+                if (this.readyState == 4 && this.status == 200) {
+
+                    let user = JSON.parse(this.responseText)[0]
+                    document.getElementById('formsnd').style.display = "block"
+                    document.getElementById('name').value = user.nom
+                    document.getElementById('firstname').value = user.prenom
+                    document.getElementById('email').value = user.email
+                    document.getElementById("token").innerHTML = token;
+                    console.log(user)
+                } else {
+                    console.log('out')
+                }
+            }
+            xhttp.open("GET", "https://tst.quantiq.nc/devweb-cfa/api/index.php?service=user&action=request&token=" + token, true);
+            xhttp.send();
+        }
+
+        function save() {
+            let httpRequest = new XMLHttpRequest();
+            httpRequest.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    if (JSON.parse(this.responseText)["result"]) {
+                        let result = JSON.parse(this.responseText);
+                        if (result.result === 'yatta!') {
+                            document.getElementById('nom').value = result.data.nom;
+                            document.getElementById('prenom').value = result.data.prenom;
+                            document.getElementById('email').value = result.data.email;
+                        }
+                        alert(result.result)
+                    };
+                }
+            };
+
+            httpRequest.open("POST", 'https://tst.quantiq.nc/devweb-cfa/api/index.php', true);
+            httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+            httpRequest.send(
+                "token=" + document.getElementById("token").innerHTML + "&" + "nom=" + document.getElementById('name').value + "&" + "prenom=" + document.getElementById('firstname').value + "&" + "email=" + document.getElementById('email').value);
+        }
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+
+</html>
